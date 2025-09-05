@@ -10,12 +10,12 @@
     <style>
         :root {
             --primary: #6c5ce7;
-            --secondary: #a29bfe;
+            --secondary: #a22bfe;
             --dark: #121212;
             --light: #f8f9fa;
-            --accent: #fd79a8;
+            --accent: #fd5988;
             --text: #b3b3b3;
-            --card-bg: rgba(32, 32, 32, 0.8);
+            --card-bg: rgba(32, 32, 32, 0.3); /* Default transparansi lebih tinggi */
         }
 
         * {
@@ -32,11 +32,26 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Particle background container */
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: transparent; /* Menjadikan background transparan agar partikel terlihat */
         }
 
         header {
             padding: 1.5rem;
             text-align: center;
+            position: relative;
+            z-index: 10;
+            background: transparent; /* Menjadikan header transparan */
         }
 
         h1 {
@@ -63,8 +78,10 @@
             background: var(--card-bg);
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(1.5px); /* Mengurangi blur untuk visibilitas partikel */
+            border: 1px solid rgba(205, 255, 255, 0.05);
+            position: relative;
+            z-index: 10;
         }
 
         .now-playing {
@@ -363,7 +380,6 @@
             font-weight: 300;
         }
 
-        /* Mobile optimizations */
         @media (max-width: 480px) {
             .player-container {
                 padding: 1.25rem;
@@ -387,7 +403,6 @@
             }
         }
 
-        /* Theme toggle */
         .theme-toggle {
             position: fixed;
             top: 15px;
@@ -408,6 +423,8 @@
     </style>
 </head>
 <body>
+    <div id="particles-js"></div>
+
     <button class="theme-toggle" id="themeToggle"><i class="fas fa-moon"></i></button>
     
     <header>
@@ -424,7 +441,7 @@
             </div>
             <div class="song-info">
                 <h2 class="song-title" id="songTitle">Select a song</h2>
-                <p class="song-artist">Play Old</p>
+                <p class="song-artist">-Play Old-</p>
             </div>
         </div>
 
@@ -464,9 +481,94 @@
 
     <audio id="audioPlayer"></audio>
 
+    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
     <script>
+        particlesJS('particles-js', {
+            particles: {
+                number: {
+                    value: 80,
+                    density: {
+                        enable: true,
+                        value_area: 800
+                    }
+                },
+                color: {
+                    value: '#a29bfe'
+                },
+                shape: {
+                    type: 'circle',
+                    stroke: {
+                        width: 0,
+                        color: '#000000'
+                    }
+                },
+                opacity: {
+                    value: 0.5,
+                    random: true,
+                    anim: {
+                        enable: false,
+                        speed: 1,
+                        opacity_min: 0.1,
+                        sync: false
+                    }
+                },
+                size: {
+                    value: 3,
+                    random: true,
+                    anim: {
+                        enable: false,
+                        speed: 40,
+                        size_min: 0.1,
+                        sync: false
+                    }
+                },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#6c5ce7',
+                    opacity: 0.4,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: 'none',
+                    random: false,
+                    straight: false,
+                    out_mode: 'out',
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: {
+                    onhover: {
+                        enable: true,
+                        mode: 'grab'
+                    },
+                    onclick: {
+                        enable: true,
+                        mode: 'push'
+                    },
+                    resize: true
+                },
+                modes: {
+                    grab: {
+                        distance: 140,
+                        line_linked: {
+                            opacity: 1
+                        }
+                    },
+                    push: {
+                        particles_nb: 4
+                    }
+                }
+            },
+            retina_detect: true
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
-            // DOM Elements
             const audioPlayer = document.getElementById('audioPlayer');
             const playBtn = document.getElementById('playBtn');
             const prevBtn = document.getElementById('prevBtn');
@@ -484,13 +586,11 @@
             const volumeSlider = document.getElementById('volumeSlider');
             const themeToggle = document.getElementById('themeToggle');
 
-            // App state
             let songs = [];
             let currentSongIndex = 0;
             let isPlaying = false;
             let isDarkMode = true;
 
-            // Load songs from JSON
             fetch('songs.json')
                 .then(response => {
                     if (!response.ok) {
@@ -508,7 +608,6 @@
                     songList.innerHTML = '<div class="error">Failed to load songs. Please check your JSON file.</div>';
                 });
 
-            // Render playlist
             function renderPlaylist() {
                 songList.innerHTML = '';
                 
@@ -541,7 +640,6 @@
                 });
             }
 
-            // Update active song in playlist
             function updateActiveSong() {
                 document.querySelectorAll('.song-item').forEach((item, index) => {
                     if (index === currentSongIndex) {
@@ -552,7 +650,6 @@
                 });
             }
 
-            // Load song
             function loadSong(index) {
                 if (songs.length === 0 || index < 0 || index >= songs.length) return;
                 
@@ -561,18 +658,15 @@
                 vinylLabel.textContent = song.title.split(' ').map(word => word[0]).join('').substring(0, 2);
                 audioPlayer.src = song.url;
                 
-                // Reset progress
                 progress.style.width = '0%';
                 currentTimeEl.textContent = '0:00';
                 
-                // Update duration when metadata is loaded
                 audioPlayer.addEventListener('loadedmetadata', () => {
                     durationEl.textContent = formatTime(audioPlayer.duration);
                     updateSongDurations();
                 });
             }
 
-            // Update all song durations in playlist
             function updateSongDurations() {
                 document.querySelectorAll('.song-item').forEach((item, index) => {
                     if (index === currentSongIndex) {
@@ -584,7 +678,6 @@
                 });
             }
 
-            // Play song
             function playSong() {
                 if (songs.length === 0) return;
                 
@@ -600,7 +693,6 @@
                     });
             }
 
-            // Pause song
             function pauseSong() {
                 isPlaying = false;
                 audioPlayer.pause();
@@ -608,7 +700,6 @@
                 vinyl.classList.remove('playing');
             }
 
-            // Previous song
             function prevSong() {
                 if (songs.length === 0) return;
                 
@@ -621,7 +712,6 @@
                 updateActiveSong();
             }
 
-            // Next song
             function nextSong() {
                 if (songs.length === 0) return;
                 
@@ -634,7 +724,6 @@
                 updateActiveSong();
             }
 
-            // Format time (seconds to mm:ss)
             function formatTime(seconds) {
                 if (isNaN(seconds)) return "0:00";
                 const mins = Math.floor(seconds / 60);
@@ -642,7 +731,6 @@
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             }
 
-            // Update progress bar
             function updateProgress() {
                 const { currentTime, duration } = audioPlayer;
                 const progressPercent = (currentTime / duration) * 100;
@@ -650,7 +738,6 @@
                 currentTimeEl.textContent = formatTime(currentTime);
             }
 
-            // Set progress bar on click
             function setProgress(e) {
                 const width = this.clientWidth;
                 const clickX = e.offsetX;
@@ -658,7 +745,6 @@
                 audioPlayer.currentTime = (clickX / width) * duration;
             }
 
-            // Event Listeners
             playBtn.addEventListener('click', () => {
                 if (songs.length === 0) return;
                 
@@ -689,23 +775,55 @@
                 audioPlayer.volume = volumeSlider.value;
             });
 
-            // Theme toggle
             themeToggle.addEventListener('click', () => {
                 isDarkMode = !isDarkMode;
                 if (isDarkMode) {
                     document.documentElement.style.setProperty('--dark', '#121212');
                     document.documentElement.style.setProperty('--light', '#f8f9fa');
-                    document.documentElement.style.setProperty('--card-bg', 'rgba(32, 32, 32, 0.8)');
+                    document.documentElement.style.setProperty('--card-bg', 'rgba(32, 32, 32, 0.3)');
                     themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                    particlesJS('particles-js', {
+                        particles: {
+                            number: { value: 80, density: { enable: true, value_area: 800 } },
+                            color: { value: '#a29bfe' },
+                            shape: { type: 'circle', stroke: { width: 0, color: '#000000' } },
+                            opacity: { value: 0.5, random: true, anim: { enable: false } },
+                            size: { value: 3, random: true, anim: { enable: false } },
+                            line_linked: { enable: true, distance: 150, color: '#6c5ce7', opacity: 0.4, width: 1 },
+                            move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
+                        },
+                        interactivity: {
+                            detect_on: 'canvas',
+                            events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' }, resize: true },
+                            modes: { grab: { distance: 140, line_linked: { opacity: 1 } }, push: { particles_nb: 4 } }
+                        },
+                        retina_detect: true
+                    });
                 } else {
                     document.documentElement.style.setProperty('--dark', '#f8f9fa');
                     document.documentElement.style.setProperty('--light', '#121212');
-                    document.documentElement.style.setProperty('--card-bg', 'rgba(245, 245, 245, 0.8)');
+                    document.documentElement.style.setProperty('--card-bg', 'rgba(245, 245, 245, 0.3)');
                     themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                    particlesJS('particles-js', {
+                        particles: {
+                            number: { value: 80, density: { enable: true, value_area: 800 } },
+                            color: { value: '#6c5ce7' },
+                            shape: { type: 'circle', stroke: { width: 0, color: '#000000' } },
+                            opacity: { value: 0.5, random: true, anim: { enable: false } },
+                            size: { value: 3, random: true, anim: { enable: false } },
+                            line_linked: { enable: true, distance: 150, color: '#a29bfe', opacity: 0.4, width: 1 },
+                            move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
+                        },
+                        interactivity: {
+                            detect_on: 'canvas',
+                            events: { onhover: { enable: true, mode: 'grab' }, onclick: { enable: true, mode: 'push' }, resize: true },
+                            modes: { grab: { distance: 140, line_linked: { opacity: 1 } }, push: { particles_nb: 4 } }
+                        },
+                        retina_detect: true
+                    });
                 }
             });
 
-            // Initialize
             audioPlayer.volume = volumeSlider.value;
         });
     </script>
